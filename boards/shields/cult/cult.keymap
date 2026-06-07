@@ -4,8 +4,8 @@
  * 4x4 layout — 15 switches + encoder push at R0C0
  *
  * Layer 0 : Default
- * Layer 1 : Lower  (held via K33)
- * Layer 2 : Raise  (held via K32)
+ * Layer 1 : Lower  (held via MO 1 at R3C2)
+ * Layer 2 : Raise  (held via MO 2 at R3C3)
  */
 
 #include <behaviors.dtsi>
@@ -18,17 +18,17 @@
         compatible = "zmk,keymap";
 
         /* ── Layer 0 : Default ───────────────────────────────────────
-         *  [ENC]   7    8    9
+         *  [MUTE]  7    8    9
          *    4     5    6   BKSP
          *    1     2    3   ENT
          *    0     .   MO1  MO2
          */
         default_layer {
             bindings = <
-                &kp C_MUTE  &kp N7  &kp N8   &kp N9
-                &kp N4      &kp N5  &kp N6   &kp BSPC
-                &kp N1      &kp N2  &kp N3   &kp RET
-                &kp N0      &kp DOT &mo 1    &mo 2
+                &kp C_MUTE  &kp N7   &kp N8  &kp N9
+                &kp N4      &kp N5   &kp N6  &kp BSPC
+                &kp N1      &kp N2   &kp N3  &kp RET
+                &kp N0      &kp DOT  &mo 1   &mo 2
             >;
             sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN>;
         };
@@ -37,7 +37,7 @@
          *  [MUTE]  F7   F8   F9
          *   F4     F5   F6   DEL
          *   F1     F2   F3   ESC
-         *   ---    --- [held] ---
+         *  trans  trans held trans
          */
         lower_layer {
             bindings = <
@@ -50,17 +50,17 @@
         };
 
         /* ── Layer 2 : Raise ─────────────────────────────────────────
-         *  [BOOT]  BT1  BT2  BT3
-         *  BTCLR   ---  ---  ---
-         *  RGB_TOG RGB+ RGB- ---
-         *   ---    --- ---  [held]
+         *  [BOOT]  BT0  BT1  BT2
+         *  BTCLR  trans trans trans
+         *  RGBTOG RGB+ RGB-  trans
+         *  trans  trans trans held
          */
         raise_layer {
             bindings = <
-                &bootloader      &bt BT_SEL 0       &bt BT_SEL 1       &bt BT_SEL 2
-                &bt BT_CLR       &trans             &trans             &trans
-                &rgb_ug RGB_TOG  &rgb_ug RGB_BRI_INC &rgb_ug RGB_BRI_DEC &trans
-                &trans           &trans             &trans             &trans
+                &bootloader     &bt BT_SEL 0    &bt BT_SEL 1    &bt BT_SEL 2
+                &bt BT_CLR      &trans          &trans          &trans
+                &rgb_ug RGB_TOG &rgb_ug RGB_BRI_INC &rgb_ug RGB_BRI_DEC &trans
+                &trans          &trans          &trans          &trans
             >;
             sensor-bindings = <&inc_dec_kp C_BRI_UP C_BRI_DN>;
         };
