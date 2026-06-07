@@ -1,26 +1,27 @@
 /*
  * cult.overlay — ZMK shield overlay for cult keyboard
  * 4x4 matrix | 15 switches + 1 encoder push-switch at R0C0
- * Per-key RGB: 16x SK6812/WS2812 on P1.04
- * Underglow:    9x SK6812/WS2812 on P1.06
- * Encoder: A=P0.07  B=P1.09
+ * Per-key RGB : 16x SK6812/WS2812  Din = P1.04
+ * Underglow   :  9x SK6812/WS2812  Din = P1.06
+ * Encoder     : A = P0.07  B = P1.09
  */
 
 #include <dt-bindings/zmk/matrix_transform.h>
+#include <dt-bindings/led/led.h>
 
 / {
     chosen {
-        zmk,kscan = &kscan0;
+        zmk,kscan            = &kscan0;
         zmk,matrix_transform = &default_transform;
+        zmk,underglow        = &led_strip_perkey;
     };
 
     default_transform: keymap_transform_0 {
         compatible = "zmk,matrix-transform";
         columns = <4>;
-        rows = <4>;
+        rows    = <4>;
         /*
          * R0C0 = encoder push-switch (top-left)
-         * Layout (row, col):
          * ENC  K01  K02  K03
          * K10  K11  K12  K13
          * K20  K21  K22  K23
@@ -36,7 +37,6 @@
 
     kscan0: kscan {
         compatible = "zmk,kscan-gpio-matrix";
-        label = "KSCAN";
         diode-direction = "col2row";
 
         row-gpios
@@ -54,10 +54,8 @@
             ;
     };
 
-    /* Rotary encoder */
     encoder_0: encoder_0 {
         compatible = "alps,ec11";
-        label = "ENCODER_0";
         a-gpios = <&gpio0 7 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
         b-gpios = <&gpio1 9 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
         steps = <80>;
@@ -71,17 +69,42 @@
     };
 };
 
-/* Per-key RGB — 16 LEDs on P1.04 */
+/* ── Per-key RGB: 16 LEDs on P1.04 via SPI1 ─────────────────────── */
+&pinctrl {
+    spi1_default: spi1_default {
+        group1 {
+            psels = <NRF_PSEL(SPIM_MOSI, 1, 4)>;  /* P1.04 */
+        };
+    };
+    spi1_sleep: spi1_sleep {
+        group1 {
+            psels = <NRF_PSEL(SPIM_MOSI, 1, 4)>;
+            low-power-enable;
+        };
+    };
+
+    spi3_default: spi3_default {
+        group1 {
+            psels = <NRF_PSEL(SPIM_MOSI, 1, 6)>;  /* P1.06 */
+        };
+    };
+    spi3_sleep: spi3_sleep {
+        group1 {
+            psels = <NRF_PSEL(SPIM_MOSI, 1, 6)>;
+            low-power-enable;
+        };
+    };
+};
+
 &spi1 {
     compatible = "nordic,nrf-spim";
     status = "okay";
-    mosi-pin = <4>;   /* P1.04 = pin 4 on gpio1 */
-    sck-pin  = <3>;   /* unused but required by driver — tie to GND on PCB */
-    cs-gpios = <>;
+    pinctrl-0 = <&spi1_default>;
+    pinctrl-1 = <&spi1_sleep>;
+    pinctrl-names = "default", "sleep";
 
     led_strip_perkey: ws2812@0 {
         compatible = "worldsemi,ws2812-spi";
-        label = "PER_KEY_RGB";
         reg = <0>;
         spi-max-frequency = <4000000>;
         chain-length = <16>;
@@ -93,17 +116,16 @@
     };
 };
 
-/* Underglow — 9 LEDs on P1.06 */
+/* ── Underglow: 9 LEDs on P1.06 via SPI3 ────────────────────────── */
 &spi3 {
     compatible = "nordic,nrf-spim";
     status = "okay";
-    mosi-pin = <6>;   /* P1.06 = pin 6 on gpio1 */
-    sck-pin  = <5>;   /* unused — tie to GND on PCB */
-    cs-gpios = <>;
+    pinctrl-0 = <&spi3_default>;
+    pinctrl-1 = <&spi3_sleep>;
+    pinctrl-names = "default", "sleep";
 
     led_strip_underglow: ws2812@0 {
         compatible = "worldsemi,ws2812-spi";
-        label = "UNDERGLOW_RGB";
         reg = <0>;
         spi-max-frequency = <4000000>;
         chain-length = <9>;
@@ -112,11 +134,5 @@
         color-mapping  = <LED_COLOR_ID_GREEN
                           LED_COLOR_ID_RED
                           LED_COLOR_ID_BLUE>;
-    };
-};
-
-/ {
-    chosen {
-        zmk,underglow = &led_strip_perkey;
     };
 };
